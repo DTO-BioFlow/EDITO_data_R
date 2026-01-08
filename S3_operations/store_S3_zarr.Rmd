@@ -1,0 +1,157 @@
+---
+title: "Writing data to EDITO private storage"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+## Install packages
+
+```{r}
+packages <- c(
+  "terra", "stars", "ggplot2", "sf", "dplyr",
+  "paws", "reticulate"
+)
+
+installed <- rownames(installed.packages())
+for (pkg in packages) {
+  if (!pkg %in% installed) install.packages(pkg, quiet = TRUE)
+}
+```
+
+## Import packages
+
+```{r}
+library(terra)
+library(stars)
+library(ggplot2)
+library(sf)
+library(dplyr)
+library(paws)
+library(reticulate)
+```
+
+## Create sample data
+
+```{r}
+set.seed(123)
+values <- sample(0:10, size = 100, replace = TRUE)
+
+r <- rast(
+  nrows = 10,
+  ncols = 10,
+  xmin = 0,
+  xmax = 10,
+  ymin = 50,
+  ymax = 60,
+  crs = "EPSG:4326"
+)
+values(r) <- values
+
+raster <- st_as_stars(r)
+names(raster) <- "random_raster"
+attr(raster, "units") <- "arbitrary"
+attr(raster, "description") <- "Random 10x10 raster covering 0–10E, 50–60N"
+```
+
+## Inspect the random data
+
+```{r}
+print(raster)
+summary(raster)
+```
+
+```{r}
+ggplot() +
+geom_stars(data = raster) +
+scale_fill_viridis_c(name = "Value") +
+coord_sf(expand = FALSE) +
+labs(
+title = "Random Raster (0–10E, 50–60N)",
+x = "Longitude",
+y = "Latitude"
+) +
+theme_minimal()
+```
+
+## Set your credentials
+
+Place your credentials here "...". Make sure never to share your
+credentials in public!
+
+Sys.setenv("AWS_ACCESS_KEY_ID" = "...", "AWS_SECRET_ACCESS_KEY" = "...",
+"AWS_DEFAULT_REGION" = "waw3-1", "AWS_SESSION_TOKEN" = "...",
+"AWS_S3_ENDPOINT"= "minio.dive.edito.eu")
+
+```{r}
+Sys.setenv("AWS_ACCESS_KEY_ID" = "...", "AWS_SECRET_ACCESS_KEY" = "...", "AWS_DEFAULT_REGION" = "waw3-1", "AWS_SESSION_TOKEN" = "...", "AWS_S3_ENDPOINT"= "minio.dive.edito.eu")
+```
+
+## Create S3 client
+
+```{r}
+# Initialize MinIO client
+minio <- paws::s3(config = list(
+  credentials = list(
+    creds = list(
+      access_key_id = Sys.getenv("AWS_ACCESS_KEY_ID"),
+      secret_access_key = Sys.getenv("AWS_SECRET_ACCESS_KEY"),
+      session_token = Sys.getenv("AWS_SESSION_TOKEN")
+    )
+  ),
+  endpoint = paste0("https://", Sys.getenv("AWS_S3_ENDPOINT")),
+  region = Sys.getenv("AWS_DEFAULT_REGION")
+))
+```
+
+## S
+
+```{r}
+# -----------------------------
+# Use reticulate to write Zarr locally
+# -----------------------------
+reticulate::py_install(c("xarray", "zarr"), pip = TRUE)
+
+xr <- import("xarray")
+zarr <- import("zarr")
+
+# Convert raster to array
+r_array <- as.array(raster[[1]])
+
+# Create xarray DataArray
+da <- xr$DataArray(
+  r_array,
+  dims = c("y", "x"),
+  coords = list(
+    y = seq(50.5, 59.5, length.out = dim(r_array)[1]),
+    x = seq(0.5, 9.5, length.out = dim(r_array)[2])
+  ),
+  name = "random_raster"
+)
+
+# Write Zarr locally
+local_zarr_dir <- "random_raster_tmp.zarr"
+da$to_dataset()$to_zarr(store = local_zarr_dir, mode = "w")
+cat("Raster written locally as Zarr.\n")
+
+# -----------------------------
+# Upload local Zarr folder to MinIO
+# -----------------------------
+bucket <- "oidc-willemboone"  # replace with your bucket name
+remote_prefix <- "random_raster_with_R15.zarr"  # destination folder in bucket
+
+# List all files recursively
+files <- list.files(local_zarr_dir, recursive = TRUE, full.names = TRUE)
+for (f in files) {
+  key <- paste0(remote_prefix, "/", gsub(paste0(local_zarr_dir, "/"), "", f))
+  minio$put_object(
+    Bucket = bucket,
+    Key = key,
+    Body = readBin(f, what = "raw", n = file.info(f)$size)
+  )
+}
+
+cat("Raster uploaded to MinIO as Zarr successfully.\n")
+
+```
