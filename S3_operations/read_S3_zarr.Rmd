@@ -1,0 +1,36 @@
+# Read S3 zarr
+
+```{r}
+library(stars)
+library(reticulate)
+
+# 1. Import xarray
+xr <- import("xarray")
+
+# 2. Remote Zarr URL
+zarr_url <- "https://minio.dive.edito.eu/oidc-willemboone/random_raster_with_R15.zarr/"
+
+# 3. Open Zarr directly
+ds <- xr$open_zarr(store = zarr_url, consolidated = TRUE)
+
+# 4. Extract array and coordinates
+r_array <- ds$random_raster$values
+y_coords <- as.numeric(ds$y$values)
+x_coords <- as.numeric(ds$x$values)
+
+# 5. Create stars object with explicit dimensions
+r_stars <- st_as_stars(
+  list(random_raster = r_array),
+  dimensions = st_dimensions(
+    x = x_coords,
+    y = y_coords
+  )
+)
+
+# 6. Set CRS
+st_crs(r_stars) <- 4326
+
+# 7. Inspect
+print(r_stars)
+plot(r_stars)
+```
