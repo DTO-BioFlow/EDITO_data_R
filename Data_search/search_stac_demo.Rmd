@@ -1,7 +1,7 @@
 ## Source the script
 
 ```{r}
-source("search_stac.R")
+source("https://raw.githubusercontent.com/DTO-BioFlow/EDITO_data_R/refs/heads/main/Data_search/supporting_scripts/search_stac.R")
 ```
 
 ## Search EDITO STAC

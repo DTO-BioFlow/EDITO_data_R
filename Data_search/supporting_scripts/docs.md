@@ -2,7 +2,7 @@
 
 ## Install
 Simply source the functions from github.
-```source "https://github.com/DTO-BioFlow/EDITO\_data\_R\"```
+```source "https://github.com/DTO-BioFlow/EDITO_data_R/blob/main/Data_search/supporting_scripts/search_stac.R"```
 
 
 ## Functions
@@ -30,7 +30,7 @@ This function performs a client-side scan of one or more STAC collections and re
 
 
 
-### Examples 
+#### Examples 
 
 Search all collections for items containing "koster" in their title:
 
