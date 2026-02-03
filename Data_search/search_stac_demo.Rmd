@@ -1,0 +1,15 @@
+## Source the script
+
+```{r}
+source("search_stac.R")
+```
+
+## Search EDITO STAC
+
+```{r}
+results <- search_on_title("koster", verbose = 1)
+```
+
+```{R}
+results[1]
+```
