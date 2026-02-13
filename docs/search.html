@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PH1 Changes in Plankton Communities</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="https://dto-bioflow.eu/" class="navbar-logo">
+            <img src="https://dto-bioflow.eu/themes/custom/skeleton/logo.svg"
+                 alt="DTO-Bioflow logo">
+        </a>
+
+        <ul class="navbar-menu">
+            <li><a href="index.html">Welcome</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="search.html">Search Data</a></li>
+            <li><a href="s3_operations.html">S3 Operations</a></li>
+        </ul>
+    </div>
+</nav>
+
+<main class="page-content">
+    <h2>
+        Search data in EDITO STAC
+    </h2>
+    <h3>
+        Install functions
+    </h3>
+    <p>
+        Simply source the functions from github.
+        <br>
+        <code>
+            source "https://github.com/DTO-BioFlow/EDITO_data_R/blob/main/Data_search/supporting_scripts/search_stac.R"
+        </code>
+    </p>
+    <h3>
+        Function 1: <code>search_on_title</code>
+    </h3>
+        <h4>
+        Description
+        </h4>
+            <p>
+                Search STAC items whose title contains a given substring.
+            <br>
+            This function performs a client-side scan of one or more STAC collections and returns all items whose title property 
+            contains the provided search string (case-insensitive). Since the target STAC API does not support the /search endpoint, 
+            server-side filtering is unavailable and a full collection scan is required.
+            </p>
+        <h4>
+            Args
+        </h4>
+        <p>
+            <ul>
+                <li>
+                    <b>title [string]</b>: Substring to search for within the item title field. The match is performed in a 
+                    case-insensitive manner.
+                </li>
+                <li>
+                    <b>collection [string, optional]</b>: Identifier of a specific collection to search. If not provided, 
+                    all available collections in the catalog are searched.
+                </li>
+                <li>
+                    <b>verbose [int]</b>: level of message logs. 0 is silent, 1 is with logs, 2 has extensive logs.
+                </li>
+            </ul>
+        </p>
+        <h4>
+            Returns
+        </h4>
+        <p>
+            <ul>
+                <li>
+                    <b>Results [list of pystac items]</b>: A list of STAC items whose title field contains the specified substring.
+                </li>
+            </ul>
+        </p>
+        <h4>
+            Examples
+        </h4>
+        <p>
+            Search all collections for items containing "koster" in their title:
+            <br>
+            <code>
+                items = search_on_title("koster", verbose=1)
+            </code>
+            <br>            <br>
+            Search only within a specific collection:
+            <br>
+            <code>
+                items = search\_on\_title("koster", collection="emodnet-biology")
+            </code>
+        </p>
+</main>
+
+<footer class="footer" role="contentinfo">
+
+    <div class="footer-top">
+        <div class="footer-container">
+
+            <div class="footer-left">
+                <img src="https://dto-bioflow.eu/themes/custom/skeleton/images/flag_funded_eu.svg"
+                     alt="Funded by the European Union">
+            </div>
+            <div>
+                The DTO-Bioflow project is funded by the European Union under the Horizon Europe Programme,
+                <a href="https://cordis.europa.eu/project/id/101112823/results" target="_blank" rel="noopener noreferrer"> Grant Agreement No. 101112823</a>.
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>© DTO-Bioflow — Funded by the European Union (Horizon Europe)</p>
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>
